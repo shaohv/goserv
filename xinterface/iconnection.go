@@ -3,7 +3,7 @@ package xinterface
 import "net"
 
 //IConnction define conn
-type IConnction interface {
+type IConnection interface {
 	// Start conn, let conn work now
 	Start()
 

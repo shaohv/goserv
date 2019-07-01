@@ -15,18 +15,32 @@ type Connection struct {
 
 	isClosed bool
 
-	handleAPI xinterface.HandFunc
+	//handleAPI xinterface.HandFunc
+	Router xinterface.IRouter
 
 	ExitBuffChan chan bool
 }
 
 // NewConnection use to new a conn
-func NewConnection(conn *net.TCPConn, connID uint32, callbackAPI xinterface.HandFunc) *Connection {
+// func NewConnection(conn *net.TCPConn, connID uint32, callbackAPI xinterface.HandFunc) *Connection {
+// 	c := &Connection{
+// 		Conn:         conn,
+// 		ConnID:       connID,
+// 		isClosed:     false,
+// 		handleAPI:    callbackAPI,
+// 		ExitBuffChan: make(chan bool, 1),
+// 	}
+
+// 	return c
+// }
+
+// NewConnection use to new a conn
+func NewConnection(conn *net.TCPConn, connID uint32, router xinterface.IRouter) *Connection {
 	c := &Connection{
 		Conn:         conn,
 		ConnID:       connID,
 		isClosed:     false,
-		handleAPI:    callbackAPI,
+		Router:       router,
 		ExitBuffChan: make(chan bool, 1),
 	}
 
@@ -40,18 +54,28 @@ func (c *Connection) StartReader() {
 
 	for {
 		buf := make([]byte, 512)
-		cnt, err := c.Conn.Read(buf)
+		_, err := c.Conn.Read(buf)
 		if err != nil {
 			fmt.Println("read from coonn fail ", err)
 			c.ExitBuffChan <- true
 			continue
 		}
 
-		if err := c.handleAPI(c.Conn, buf, cnt); err != nil {
-			fmt.Println("handle fail")
-			c.ExitBuffChan <- true
-			return
+		// if err := c.handleAPI(c.Conn, buf, cnt); err != nil {
+		// 	fmt.Println("handle fail")
+		// 	c.ExitBuffChan <- true
+		// 	return
+		// }
+		req := Request{
+			conn: c,
+			data: buf,
 		}
+		fmt.Println("11111")
+		go func(request xinterface.IRequest) {
+			c.Router.PreHandle(request)
+			c.Router.Handle(request)
+			c.Router.PostHandle(request)
+		}(&req)
 	}
 }
 
@@ -92,7 +116,7 @@ func (c *Connection) GetConnID() uint32 {
 	return c.ConnID
 }
 
-// GetRemoteAddr as is name
-func (c *Connection) GetRemoteAddr() net.Addr {
+// RemoteAddr as is name
+func (c *Connection) RemoteAddr() net.Addr {
 	return c.Conn.RemoteAddr()
 }

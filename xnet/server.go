@@ -17,6 +17,8 @@ type Server struct {
 	IP string
 
 	Port int
+
+	Router xinterface.IRouter
 }
 
 // CallBackToClient as request handle
@@ -70,7 +72,7 @@ func (s *Server) Start() {
 			var cid uint32
 			cid = 0
 
-			dealConn := NewConnection(conn, cid, CallBackToClient)
+			dealConn := NewConnection(conn, cid, s.Router)
 
 			go dealConn.Start()
 		}
@@ -103,7 +105,14 @@ func NewServer(name string) xinterface.IServer {
 		IPVersion: "tcp4",
 		IP:        "0.0.0.0",
 		Port:      7777,
+		Router:    nil,
 	}
 
 	return s
+}
+
+// AddRouter ..
+func (s *Server) AddRouter(router xinterface.IRouter) {
+	s.Router = router
+	return
 }
