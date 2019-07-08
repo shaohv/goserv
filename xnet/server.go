@@ -3,6 +3,7 @@ package xnet
 import (
 	"errors"
 	"fmt"
+	"goserv/main/util"
 	"goserv/xinterface"
 	"net"
 	"time"
@@ -42,6 +43,7 @@ func (s *Server) Start() {
 	}
 
 	fmt.Printf("[Start] Server listening, IP: %s, Port: %d", s.IP, s.Port)
+	fmt.Printf("[Start] Server listening, IP: %s, Port: %d", util.GlobalObject.Host, util.GlobalObject.TCPPort)
 
 	go func() {
 
@@ -100,11 +102,13 @@ func (s *Server) Serve() {
 // NewServer create a IServer handle
 func NewServer(name string) xinterface.IServer {
 
+	util.GlobalObject.Reload()
+
 	s := &Server{
-		Name:      name,
+		Name:      util.GlobalObject.Name,
 		IPVersion: "tcp4",
-		IP:        "0.0.0.0",
-		Port:      7777,
+		IP:        util.GlobalObject.Host,
+		Port:      util.GlobalObject.TCPPort,
 		Router:    nil,
 	}
 

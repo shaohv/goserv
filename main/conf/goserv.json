@@ -1,0 +1,6 @@
+{
+    "Name" : "goserv",
+    "Host" : "0.0.0.0",
+    "TCPPort" : 7777,
+    "MaxConn": 3
+}
