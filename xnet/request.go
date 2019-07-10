@@ -20,3 +20,8 @@ func (r *Request) GetConnection() xinterface.IConnection {
 func (r *Request) GetData() []byte {
 	return r.msg.GetData()
 }
+
+// GetMsgID ..
+func (r *Request) GetMsgID() uint32 {
+	return r.msg.GetMsgId()
+}

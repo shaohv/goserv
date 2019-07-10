@@ -18,7 +18,8 @@ type Connection struct {
 	isClosed bool
 
 	//handleAPI xinterface.HandFunc
-	Router xinterface.IRouter
+	//Router xinterface.IRouter
+	MsgHandle xinterface.IMsgHandle
 
 	ExitBuffChan chan bool
 }
@@ -37,12 +38,14 @@ type Connection struct {
 // }
 
 // NewConnection use to new a conn
-func NewConnection(conn *net.TCPConn, connID uint32, router xinterface.IRouter) *Connection {
+func NewConnection(conn *net.TCPConn, connID uint32,
+	msgHandle xinterface.IMsgHandle) *Connection {
 	c := &Connection{
-		Conn:         conn,
-		ConnID:       connID,
-		isClosed:     false,
-		Router:       router,
+		Conn:     conn,
+		ConnID:   connID,
+		isClosed: false,
+		//Router:       router,
+		MsgHandle:    msgHandle,
 		ExitBuffChan: make(chan bool, 1),
 	}
 
@@ -103,12 +106,14 @@ func (c *Connection) StartReader() {
 			msg:  msg,
 		}
 
-		fmt.Println("11111")
-		go func(request xinterface.IRequest) {
-			c.Router.PreHandle(request)
-			c.Router.Handle(request)
-			c.Router.PostHandle(request)
-		}(&req)
+		// fmt.Println("11111")
+		// go func(request xinterface.IRequest) {
+		// 	c.Router.PreHandle(request)
+		// 	c.Router.Handle(request)
+		// 	c.Router.PostHandle(request)
+		// }(&req)
+
+		go c.MsgHandle.DoMsgHandle(&req)
 	}
 }
 

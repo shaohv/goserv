@@ -39,10 +39,44 @@ func (pingRouter *PingRouter) PostHandle(request xinterface.IRequest) {
 	// }
 }
 
+// HelloRouter is a applic router
+type HelloRouter struct {
+	xnet.BaseRouter
+}
+
+// PreHandle ..
+func (pingRouter *HelloRouter) PreHandle(request xinterface.IRequest) {
+	fmt.Println("PreHandler hello")
+	// _, err := request.GetConnection().GetTCPConnection().Write([]byte("before ping .."))
+	// if err != nil {
+	// 	fmt.Println("PreHander fail")
+	// }
+}
+
+// Handle ..
+func (pingRouter *HelloRouter) Handle(request xinterface.IRequest) {
+	fmt.Println("Handler hello")
+	//_, err := request.GetConnection().GetTCPConnection().Write([]byte("ping ping .."))
+	err := request.GetConnection().SendMsg(2, []byte("hello hello .."))
+	if err != nil {
+		fmt.Println("Hander fail")
+	}
+}
+
+// PostHandle ..
+func (pingRouter *HelloRouter) PostHandle(request xinterface.IRequest) {
+	fmt.Println("PostHandler hello")
+	// _, err := request.GetConnection().GetTCPConnection().Write([]byte("after ping .."))
+	// if err != nil {
+	// 	fmt.Println("PostHander fail")
+	// }
+}
+
 func main() {
 	s := xnet.NewServer("zinx V0.1")
 
-	s.AddRouter(&PingRouter{})
+	s.AddRouter(1, &PingRouter{})
+	s.AddRouter(2, &HelloRouter{})
 
 	s.Serve()
 }
