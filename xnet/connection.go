@@ -1,8 +1,10 @@
 package xnet
 
 import (
+	"errors"
 	"fmt"
 	"goserv/xinterface"
+	"io"
 	"net"
 )
 
@@ -51,25 +53,56 @@ func NewConnection(conn *net.TCPConn, connID uint32, router xinterface.IRouter) 
 func (c *Connection) StartReader() {
 	fmt.Println("Reader Goroute is start")
 	defer fmt.Println(c.Conn.RemoteAddr().String(), " conn reader exit! ")
+	defer c.Stop()
+	dp := NewDataPack()
 
 	for {
-		buf := make([]byte, 512)
-		_, err := c.Conn.Read(buf)
-		if err != nil {
-			fmt.Println("read from coonn fail ", err)
-			c.ExitBuffChan <- true
-			continue
-		}
+		// buf := make([]byte, 512)
+		// _, err := c.Conn.Read(buf)
+		// if err != nil {
+		// 	fmt.Println("read from coonn fail ", err)
+		// 	c.ExitBuffChan <- true
+		// 	continue
+		// }
 
 		// if err := c.handleAPI(c.Conn, buf, cnt); err != nil {
 		// 	fmt.Println("handle fail")
 		// 	c.ExitBuffChan <- true
 		// 	return
 		// }
+
+		headData := make([]byte, dp.GetHeadLen())
+		_, err := io.ReadFull(c.Conn, headData)
+		if err != nil {
+			fmt.Println("read head fail ", err)
+			break
+		}
+
+		msg, err := dp.UnPack(headData)
+		if err != nil {
+			fmt.Println("unpack head fail ", err)
+			return
+		}
+
+		var data []byte
+		if msg.GetDataLen() > 0 {
+			data = make([]byte, msg.GetDataLen())
+
+			_, err := io.ReadFull(c.Conn, data)
+			if err != nil {
+				fmt.Println("read date fail ", err)
+				return
+			}
+
+			fmt.Println("===> Rcv Msg ID=", msg.GetMsgId(), " DataLen=", msg.GetDataLen(), " data=", string(data))
+		}
+		msg.SetData(data)
+
 		req := Request{
 			conn: c,
-			data: buf,
+			msg:  msg,
 		}
+
 		fmt.Println("11111")
 		go func(request xinterface.IRequest) {
 			c.Router.PreHandle(request)
@@ -119,4 +152,25 @@ func (c *Connection) GetConnID() uint32 {
 // RemoteAddr as is name
 func (c *Connection) RemoteAddr() net.Addr {
 	return c.Conn.RemoteAddr()
+}
+
+// SendMsg ..
+func (c *Connection) SendMsg(msgID uint32, data []byte) error {
+	dp := NewDataPack()
+
+	if c.isClosed == true {
+		return errors.New("conn is closed")
+	}
+
+	sendData, err := dp.Pack(NewMsgPkg(msgID, data))
+	if err != nil {
+		return errors.New("pack msg fail")
+	}
+
+	if _, err := c.Conn.Write(sendData); err != nil {
+		c.isClosed = true
+		return err
+	}
+
+	return nil
 }

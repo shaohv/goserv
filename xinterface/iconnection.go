@@ -18,6 +18,8 @@ type IConnection interface {
 
 	// RemoteAddr
 	RemoteAddr() net.Addr
+
+	SendMsg(msgID uint32, data []byte) error
 }
 
 // HandFunc define a universal handle

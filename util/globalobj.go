@@ -36,7 +36,7 @@ func (g *GlobalObj) Reload() {
 		panic(err)
 	}
 
-	err = json.Unmarshal(data, &GlobalObject)
+	err = json.Unmarshal(data, GlobalObject)
 	if err != nil {
 		panic(err)
 	}

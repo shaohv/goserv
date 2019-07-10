@@ -3,7 +3,7 @@ package xnet
 import (
 	"errors"
 	"fmt"
-	"goserv/main/util"
+	"goserv/util"
 	"goserv/xinterface"
 	"net"
 	"time"

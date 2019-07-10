@@ -7,7 +7,8 @@ import (
 // Request represent a client req
 type Request struct {
 	conn xinterface.IConnection
-	data []byte
+	//data []byte
+	msg xinterface.IMessage
 }
 
 // GetConnection return req's connn
@@ -17,5 +18,5 @@ func (r *Request) GetConnection() xinterface.IConnection {
 
 // GetData return req's data
 func (r *Request) GetData() []byte {
-	return r.data
+	return r.msg.GetData()
 }

@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"goserv/xnet"
+	"io"
 	"net"
 	"time"
 )
@@ -17,21 +19,44 @@ func main() {
 		return
 	}
 
+	dp := xnet.NewDataPack()
 	for {
-		_, err := conn.Write([]byte("hello	ZINX"))
+
+		sendData, _ := dp.Pack(xnet.NewMsgPkg(1, []byte("hello	ZINX")))
+
+		_, err := conn.Write(sendData)
 		if err != nil {
 			fmt.Println("client write err ", err)
 			return
 		}
 
-		buf := make([]byte, 512)
-		cnt, err := conn.Read(buf)
+		headData := make([]byte, dp.GetHeadLen())
+		_, err = io.ReadFull(conn, headData)
 		if err != nil {
-			fmt.Println("client read err ", err)
+			fmt.Println("read head fail ", err)
+			break
+		}
+
+		msgHead, err := dp.UnPack(headData)
+		if err != nil {
+			fmt.Println("unpack head fail ", err)
 			return
 		}
 
-		fmt.Printf("Server echo back: %s, cnt = %d\n", buf, cnt)
+		if msgHead.GetDataLen() > 0 {
+			msg := msgHead.(*xnet.Message)
+			msg.Data = make([]byte, msg.GetDataLen())
+
+			_, err := io.ReadFull(conn, msg.Data)
+			if err != nil {
+				fmt.Println("read date fail ", err)
+				return
+			}
+
+			fmt.Println("===> Rcv Msg ID=", msg.GetMsgId(), " DataLen=", msg.GetDataLen(), " data=", string(msg.GetData()))
+		}
+
+		//fmt.Printf("Server echo back: %s, cnt = %d\n", buf, cnt)
 
 		time.Sleep(3 * time.Second)
 	}
