@@ -22,6 +22,8 @@ type Connection struct {
 	MsgHandle xinterface.IMsgHandle
 
 	ExitBuffChan chan bool
+
+	msgChan chan []byte
 }
 
 // NewConnection use to new a conn
@@ -47,6 +49,7 @@ func NewConnection(conn *net.TCPConn, connID uint32,
 		//Router:       router,
 		MsgHandle:    msgHandle,
 		ExitBuffChan: make(chan bool, 1),
+		msgChan:      make(chan []byte),
 	}
 
 	return c
@@ -121,10 +124,27 @@ func (c *Connection) StartReader() {
 func (c *Connection) Start() {
 	go c.StartReader()
 
+	go c.StartWriter()
+
 	for {
 		select {
 		case <-c.ExitBuffChan:
 			fmt.Println("goroute exit")
+			return
+		}
+	}
+}
+
+// StartWriter ..
+func (c *Connection) StartWriter() {
+	for {
+		select {
+		case data := <-c.msgChan:
+			if _, err := c.Conn.Write(data); err != nil {
+				c.isClosed = true
+				return
+			}
+		case <-c.ExitBuffChan:
 			return
 		}
 	}
@@ -172,10 +192,12 @@ func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 		return errors.New("pack msg fail")
 	}
 
-	if _, err := c.Conn.Write(sendData); err != nil {
-		c.isClosed = true
-		return err
-	}
+	c.msgChan <- sendData
+
+	// if _, err := c.Conn.Write(sendData); err != nil {
+	// 	c.isClosed = true
+	// 	return err
+	// }
 
 	return nil
 }
