@@ -3,6 +3,7 @@ package xnet
 import (
 	"errors"
 	"fmt"
+	"goserv/util"
 	"goserv/xinterface"
 	"io"
 	"net"
@@ -116,7 +117,11 @@ func (c *Connection) StartReader() {
 		// 	c.Router.PostHandle(request)
 		// }(&req)
 
-		go c.MsgHandle.DoMsgHandle(&req)
+		if util.GlobalObject.WorkPoolSize > 0 {
+			c.MsgHandle.SendMsgToTaskQueue(&req)
+		} else {
+			go c.MsgHandle.DoMsgHandle(&req)
+		}
 	}
 }
 

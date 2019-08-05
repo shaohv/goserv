@@ -22,6 +22,12 @@ type GlobalObj struct {
 	MaxPacketSize uint32
 
 	MaxConn uint32
+
+	WorkPoolSize uint32
+
+	MaxTaskLen uint32
+
+	ConfigFile string
 }
 
 // GlobalObject ..
@@ -30,7 +36,7 @@ var GlobalObject *GlobalObj
 // Reload ..
 func (g *GlobalObj) Reload() {
 
-	data, err := ioutil.ReadFile("conf/goserv.json")
+	data, err := ioutil.ReadFile(g.ConfigFile)
 	if err != nil {
 		fmt.Println("read setting file fail ", err)
 		panic(err)
@@ -50,6 +56,9 @@ func init() {
 		MaxPacketSize: 4096,
 		TCPPort:       7777,
 		Host:          "0.0.0.0",
+		WorkPoolSize:  10,
+		MaxTaskLen:    1024,
+		ConfigFile:    "conf/goserv.json",
 	}
 
 	GlobalObject.Reload()

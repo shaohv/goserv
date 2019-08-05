@@ -47,6 +47,7 @@ func (s *Server) Start() {
 	fmt.Printf("[Start] Server listening, IP: %s, Port: %d", util.GlobalObject.Host, util.GlobalObject.TCPPort)
 
 	go func() {
+		s.msgHandler.StartWorkerPool()
 
 		// 1. construct tcp addr
 		addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
@@ -63,7 +64,7 @@ func (s *Server) Start() {
 		}
 
 		fmt.Println("Start goserv ", s.Name, "success, now listenning")
-
+		var cid uint32 = 0
 		for {
 
 			conn, err := listenner.AcceptTCP()
@@ -72,8 +73,7 @@ func (s *Server) Start() {
 				continue
 			}
 
-			var cid uint32
-			cid = 0
+			cid = cid + 1
 
 			dealConn := NewConnection(conn, cid, s.msgHandler)
 
