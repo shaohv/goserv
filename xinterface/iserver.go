@@ -14,4 +14,6 @@ type IServer interface {
 
 	// add router
 	AddRouter(msgID uint32, router IRouter)
+
+	GetConnMgr() IConnMgr
 }

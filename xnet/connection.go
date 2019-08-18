@@ -11,6 +11,7 @@ import (
 
 // Connection represents a conn
 type Connection struct {
+	TcpServer xinterface.IServer
 	//Tcp socket
 	Conn *net.TCPConn
 
@@ -41,18 +42,20 @@ type Connection struct {
 // }
 
 // NewConnection use to new a conn
-func NewConnection(conn *net.TCPConn, connID uint32,
+func NewConnection(server xinterface.IServer, conn *net.TCPConn, connID uint32,
 	msgHandle xinterface.IMsgHandle) *Connection {
 	c := &Connection{
-		Conn:     conn,
-		ConnID:   connID,
-		isClosed: false,
+		TcpServer: server,
+		Conn:      conn,
+		ConnID:    connID,
+		isClosed:  false,
 		//Router:       router,
 		MsgHandle:    msgHandle,
 		ExitBuffChan: make(chan bool, 1),
 		msgChan:      make(chan []byte),
 	}
 
+	c.TcpServer.GetConnMgr().Add(c)
 	return c
 }
 
@@ -163,6 +166,8 @@ func (c *Connection) Stop() {
 	c.isClosed = true
 
 	c.Conn.Close()
+
+	c.TcpServer.GetConnMgr().Remove(c)
 
 	c.ExitBuffChan <- true
 

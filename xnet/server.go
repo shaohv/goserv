@@ -21,6 +21,8 @@ type Server struct {
 
 	//Router xinterface.IRouter
 	msgHandler xinterface.IMsgHandle
+
+	ConnManager xinterface.IConnMgr
 }
 
 // CallBackToClient as request handle
@@ -64,7 +66,7 @@ func (s *Server) Start() {
 		}
 
 		fmt.Println("Start goserv ", s.Name, "success, now listenning")
-		var cid uint32 = 0
+		var cid uint32
 		for {
 
 			conn, err := listenner.AcceptTCP()
@@ -73,9 +75,15 @@ func (s *Server) Start() {
 				continue
 			}
 
+			if uint32(s.GetConnMgr().Len()) >= util.GlobalObject.MaxConn {
+				fmt.Println("Reach max conn, ", util.GlobalObject.MaxConn)
+				conn.Close()
+				continue
+			}
+
 			cid = cid + 1
 
-			dealConn := NewConnection(conn, cid, s.msgHandler)
+			dealConn := NewConnection(s, conn, cid, s.msgHandler)
 
 			go dealConn.Start()
 		}
@@ -87,6 +95,7 @@ func (s *Server) Stop() {
 
 	fmt.Println("[STOP] Server stoping, Name", s.Name)
 
+	s.GetConnMgr().ClearConn()
 	// TODO Server.Stop()
 }
 
@@ -111,7 +120,8 @@ func NewServer(name string) xinterface.IServer {
 		IP:        util.GlobalObject.Host,
 		Port:      util.GlobalObject.TCPPort,
 		//Router:    nil,
-		msgHandler: NewMsgHandle(),
+		msgHandler:  NewMsgHandle(),
+		ConnManager: NewConnMgr(),
 	}
 
 	return s
@@ -122,4 +132,9 @@ func (s *Server) AddRouter(msgID uint32, router xinterface.IRouter) {
 	//s.Router = router
 	s.msgHandler.AddRouter(msgID, router)
 	return
+}
+
+// GetConnMgr ..
+func (s *Server) GetConnMgr() xinterface.IConnMgr {
+	return s.ConnManager
 }

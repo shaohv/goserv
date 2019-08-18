@@ -1,6 +1,8 @@
 package xinterface
 
-import "net"
+import (
+	"net"
+)
 
 //IConnction define conn
 type IConnection interface {
