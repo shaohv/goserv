@@ -23,6 +23,10 @@ type Server struct {
 	msgHandler xinterface.IMsgHandle
 
 	ConnManager xinterface.IConnMgr
+
+	OnCallStart func(conn xinterface.IConnection)
+
+	OnCallStop func(conn xinterface.IConnection)
 }
 
 // CallBackToClient as request handle
@@ -137,4 +141,30 @@ func (s *Server) AddRouter(msgID uint32, router xinterface.IRouter) {
 // GetConnMgr ..
 func (s *Server) GetConnMgr() xinterface.IConnMgr {
 	return s.ConnManager
+}
+
+// SetOnConnStart ..
+func (s *Server) SetOnConnStart(hook func(xinterface.IConnection)) {
+	s.OnCallStart = hook
+}
+
+// SetOnConnStop ..
+func (s *Server) SetOnConnStop(hook func(xinterface.IConnection)) {
+	s.OnCallStop = hook
+}
+
+// CallOnConnStart ..
+func (s *Server) CallOnConnStart(conn xinterface.IConnection) {
+	if s.OnCallStart != nil {
+		fmt.Println("======")
+		s.OnCallStart(conn)
+	}
+}
+
+// CallOnConnStop ..
+func (s *Server) CallOnConnStop(conn xinterface.IConnection) {
+	if s.OnCallStart != nil {
+		fmt.Println("-------")
+		s.OnCallStop(conn)
+	}
 }

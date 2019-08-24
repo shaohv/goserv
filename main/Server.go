@@ -72,9 +72,25 @@ func (pingRouter *HelloRouter) PostHandle(request xinterface.IRequest) {
 	// }
 }
 
+// DoConnectionBegin ...
+func DoConnectionBegin(conn xinterface.IConnection) {
+	fmt.Println("Conn begin...")
+	err := conn.SendMsg(2, []byte("DO CONNECTION BEGIN ..."))
+	if err != nil {
+		fmt.Println("send conn begin msg fail!", err)
+	}
+}
+
+// DoConnectionStop ...
+func DoConnectionStop(conn xinterface.IConnection) {
+	fmt.Println("Conn stop ...")
+}
+
 func main() {
 	s := xnet.NewServer("zinx V0.1")
 
+	s.SetOnConnStart(DoConnectionBegin)
+	s.SetOnConnStop(DoConnectionStop)
 	s.AddRouter(1, &PingRouter{})
 	s.AddRouter(2, &HelloRouter{})
 
